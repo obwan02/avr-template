@@ -16,9 +16,13 @@ cmake ../
 make
 
 # Optionally
-make upload_first_prog
+make upload_test
 ```
+
+## TODO
+
+- [ ] Add option to make debug symbol file paths relative or not (right now it is fixed to relative)
 
 ## Credit
 
-The `generic-gcc-avr.cmake` toolchain file is basically completed ripped off from [this github repo](https://github.com/mkleemann/cmake-avr).
+The `generic-gcc-avr.cmake` toolchain file is from [this github repo](https://github.com/mkleemann/cmake-avr). It has been modified a bit to properly output debug symbols (that use relative paths)

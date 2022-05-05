@@ -65,6 +65,7 @@ set(AVR 1)
 # - AVR_SIZE_ARGS
 ##########################################################################
 
+
 # default upload tool
 if(NOT AVR_UPLOADTOOL)
     set(
@@ -138,6 +139,24 @@ endif(NOT ((CMAKE_BUILD_TYPE MATCHES Release) OR
 (CMAKE_BUILD_TYPE MATCHES Debug) OR
 (CMAKE_BUILD_TYPE MATCHES MinSizeRel)))
 
+# obwan02 - debug symbols for debug mode
+
+message(STATUS "Compiling for ${CMAKE_BUILD_TYPE} mode")
+set(AVR_EXTRA_COMPILE_FLAGS "") # No flags by default
+
+if((CMAKE_BUILD_TYPE MATCHES RelWithDebInfo) OR 
+(CMAKE_BUILD_TYPE MATCHES Debug))
+message(STATUS "Debug symbols for source files are relative to bin dir")
+	# obwan02 - holy shit this took f**king hours to get working. 
+	# The problem I had was displaying source files in proteus wasn't working. 
+	# Using `readelf --debug-dump` you can figure out that you need -gdwarf-2 to output filenames,
+	# but because we're building in WSL and debugging in Windows, the source file path needs 
+	# to be relative, so you also need the -fdebug-prefix-map=${CMAKE_SOURCE_DIR}=.. flag.
+	# I'm not sure if the -g2 or -Og flags are needed but I don't want to 
+	# screw with it
+	set(AVR_EXTRA_COMPILE_FLAGS "-g2 -Og -gdwarf-2 -fdebug-prefix-map=${CMAKE_SOURCE_DIR}=..")
+endif((CMAKE_BUILD_TYPE MATCHES RelWithDebInfo) OR 
+(CMAKE_BUILD_TYPE MATCHES Debug))
 
 
 ##########################################################################
@@ -181,11 +200,12 @@ function(add_avr_executable EXECUTABLE_NAME)
    # elf file
    add_executable(${elf_file} EXCLUDE_FROM_ALL ${ARGN})
 
+
    set_target_properties(
       ${elf_file}
       PROPERTIES
-	  COMPILE_FLAGS "-mmcu=${AVR_MCU} -I /usr/lib/avr/include"
-         LINK_FLAGS "-mmcu=${AVR_MCU} -Wl,--gc-sections -mrelax -Wl,-Map,${map_file}"
+	  COMPILE_FLAGS "-mmcu=${AVR_MCU} -I/usr/lib/avr/include ${AVR_EXTRA_COMPILE_FLAGS}"
+         LINK_FLAGS "-mmcu=${AVR_MCU} -Wl,-Map,${map_file}"
    )
 
    add_custom_command(
